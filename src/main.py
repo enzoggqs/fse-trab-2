@@ -2,6 +2,7 @@ import struct
 from time import sleep
 from threading import Event, Thread 
 from config import Uart, Oven, PID, ambient_temperature
+from datetime import datetime
 
 pid_value = 0 
 int_temp = 0 
@@ -172,7 +173,7 @@ def send_ambient_temp():
 
     sendind.clear()
 
-def rotina():
+def main_function():
     while True:
 
         receive_dashboard_commands()
@@ -184,6 +185,18 @@ def rotina():
         print("\nTemp Interna:", int_temp)
         print("Temp referencia:", ref_temp)
         print("Temp ambiente:", amb_temp, "\n")
+
+        with open('logs.csv','a') as csvfile:
+            if pid_value < 0:
+                ventoinha = pid_value
+                resistor = 0
+            else:
+                resistor = pid_value
+                ventoinha = 0 
+
+            msg = f'Temperatura Referencial = {ref_temp},Temperatura Interna={int_temp},Temperatura Ambiente = {ambient_temperature}, Ventoinha = {ventoinha}%,Resistor = {resistor}%' 
+            writer = csv.writer(csvfile, delimiter = ',')
+            print(datetime.now().strftime('%d/%m/%Y %H:%M')+',',msg,file = csvfile)
 
 def handle_exit():
     try:
@@ -219,6 +232,17 @@ def main_function_curve():
         print("Temp ambiente:", amb_temp, "\n")
 
         # if count >= 0 and count < 60:
+        with open('logs.csv','a') as csvfile:
+            if pid_value < 0:
+                ventoinha = pid_value
+                resistor = 0
+            else:
+                resistor = pid_value
+                ventoinha = 0 
+
+            msg = f'Temperatura Referencial = {ref_temp},Temperatura Interna={int_temp},Temperatura Ambiente = {ambient_temperature}, Ventoinha = {ventoinha}%,Resistor = {resistor}%' 
+            writer = csv.writer(csvfile, delimiter = ',')
+            print(datetime.now().strftime('%d/%m/%Y %H:%M')+',',msg,file = csvfile)
 
         count += 1
 
@@ -273,7 +297,7 @@ if __name__ == '__main__':
       turn_on()
 
       main_thread = Thread(target=main_function, args=())
-      main_thread.start()
+      main_thread.main_function()
 
       thread_handle_exit = Thread(target=handle_exit, args=())
       thread_handle_exit.start()       
