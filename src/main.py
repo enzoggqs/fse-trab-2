@@ -3,10 +3,10 @@ from time import sleep
 from threading import Event, Thread 
 from config import Uart, Oven, PID, ambient_temperature
 
-pid_value = 0
-int_temp = 0
-ref_temp = 0
-temperatura_ambiente = 0
+pid_value = 0 
+int_temp = 0 
+ref_temp = 0 
+temperatura_ambiente = 0 
 
 oven = Oven(23, 24)
 uart = Uart('/dev/serial0', 9600, 0.5)
@@ -85,6 +85,7 @@ def control_signal(pid):
 def handler():
     if turned_on.is_set():
         if started.is_set():
+            print('entrou')
 
             pid_value = pid.pid_control(ref_temp, int_temp)
             control_signal(pid_value)
@@ -142,8 +143,8 @@ def get_int_temp():
         temp = struct.unpack('f', data)[0]
 
         if temp > 0 and temp < 100:
-            int_temp = temp
-        
+            global int_temp
+            int_temp = temp     
 
 def get_ref_temp():
     message = b'\x01\x23\xc2\x09\x00\x00\x06'
@@ -155,11 +156,12 @@ def get_ref_temp():
         temp = struct.unpack('f', data)[0]
 
         if temp > 0 and temp < 100:
-            ref_temp = temp
+            global ref_temp
+            ref_temp = temp     
 
 def envia_temperatura_ambiente():
     sendind.set()
-    
+    global temperatura_ambiente
     temperatura_ambiente = ambient_temperature()
     
     val = struct.pack('!f', temperatura_ambiente)
@@ -212,9 +214,6 @@ if __name__ == '__main__':
     
 
     menuOption = menu()
-
-    # if(menuOption == 2)
-
 
     turn_on()
 

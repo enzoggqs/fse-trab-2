@@ -32,10 +32,10 @@ class Oven:
     GPIO.setup(self.vent_pin, GPIO.OUT)
 
   def chill(self, pid):
-    self.vent_pwm.change_duty_cycle(pid)
+    self.vent_pwm.ChangeDutyCycle(pid)
         
   def warm(self, pid):
-    self.res_pwm.change_duty_cycle(pid)
+    self.res_pwm.ChangeDutyCycle(pid)
 
 # Classe da UART, que monitora a conexão e as mensagens recebidas e enviadas
 class Uart:
