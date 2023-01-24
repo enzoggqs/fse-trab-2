@@ -6,7 +6,7 @@ from config import Uart, Oven, PID, ambient_temperature
 pid_value = 0 
 int_temp = 0 
 ref_temp = 0 
-temperatura_ambiente = 0 
+amb_temp = 0 
 
 oven = Oven(23, 24)
 uart = Uart('/dev/serial0', 9600, 0.5)
@@ -159,12 +159,12 @@ def get_ref_temp():
             global ref_temp
             ref_temp = temp     
 
-def envia_temperatura_ambiente():
+def send_ambient_temp():
     sendind.set()
-    global temperatura_ambiente
-    temperatura_ambiente = ambient_temperature()
+    global amb_temp
+    amb_temp = ambient_temperature()
     
-    val = struct.pack('!f', temperatura_ambiente)
+    val = struct.pack('!f', amb_temp)
     val = val[::-1]
     message = b'\x01\x16\xd6\x09\x00\x00\x06' + val
 
@@ -178,15 +178,14 @@ def rotina():
         receive_dashboard_commands()
         get_int_temp()
         get_ref_temp()
-        envia_temperatura_ambiente()
+        send_ambient_temp()
         handler()
         sleep(1)
+        print("\nTemp Interna:", int_temp)
+        print("Temp referencia:", ref_temp)
+        print("Temp ambiente:", amb_temp, "\n")
 
-        print("\nTEMPERATURA INTERNA:", int_temp)
-        print("TEMPERATURA DE REFERENCIA:", ref_temp)
-        print("TEMPERATURA AMBIENTE:", temperatura_ambiente, "\n")
-
-def trata_ctrl_c():
+def handle_exit():
     try:
         while True:
             sleep(1)
@@ -200,25 +199,81 @@ def change_vars():
   pid.Kd = float(input('Digite o valor de Kd\n'))
 
 def menu():
-  print('Bem vindo! Você deseja:\n')
+  print('Você deseja:\n')
   print('1 - Controlar o forno pelo Dashboard\n')
   print('2 - Controlar o forno pela curva de referência\n')
   option = int(input('Digite a opção escolhida\n'))
   return option
+
+def main_function_curve():
+    count = 0
+    while True:
+        receive_dashboard_commands()
+        get_int_temp()
+        get_ref_temp()
+        send_ambient_temp()
+        handler()
+        sleep(1)
+        print("\nTemp Interna:", int_temp)
+        print("Temp referencia:", ref_temp)
+        print("Temp ambiente:", amb_temp, "\n")
+
+        # if count >= 0 and count < 60:
+
+        count += 1
+
+def handle_curve_control():
+  sendind.set()
+
+  message = b'\x01\x16\xd4\x09\x00\x00\x06\x01'
+
+  uart.send(message, len(b'\x01\x16\xd4\x09\x00\x00\x06\x01'))
+  data = uart.receive()
+
+  if data is not None:
+      stop()
+      turned_on.set()
+
+  sendind.clear()
+
+  inputed_temp = float(input('Digite o Valor da temperatura \n'))
+  inputed_temp_bin = struct.pack('f', inputed_temp)
+
+  sendind.set()
+  message = b'\x01\x16\xd2\x09\x00\x00\x06' + inputed_temp_bin
+
+  uart.send(message, len(message))
+  data = uart.receive()
+
+  if data is not None:
+      started.set()
+
+  sendind.clear()
+
+  turn_on()
+
+  start()
+
+  thread_handle_exit = Thread(target=handle_exit, args=())
+  thread_handle_exit.start()    
+
+  thread_main_function_curve = Thread(target=main_function_curve, args=())
+  thread_main_function_curve.start() 
 
 if __name__ == '__main__':
     should_change_vars = input('Gostaria de mudar as variáveis do PID? S(Sim) ou N(não) \n')
     if should_change_vars != 'N':
       change_vars()
 
-    
-
     menuOption = menu()
 
-    turn_on()
+    if(menuOption != 1):
+      handle_curve_control()
+    else:
+      turn_on()
 
-    thread_rotina = Thread(target=rotina, args=())
-    thread_rotina.start()
+      main_thread = Thread(target=main_function, args=())
+      main_thread.start()
 
-    thread_captura_encerramento = Thread(target=trata_ctrl_c, args=())
-    thread_captura_encerramento.start()    
+      thread_handle_exit = Thread(target=handle_exit, args=())
+      thread_handle_exit.start()       
