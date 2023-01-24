@@ -46,3 +46,11 @@ Após ter acessado o diretório src do repositório clonado, basta usar o seguin
 ```
     python3 main.py
 ```
+
+### Opções do projeto
+
+Após ter rodado o projeto, a primeira coisa é escolher se deseja mudar os parâmetros de PID.
+![image](https://user-images.githubusercontent.com/38733364/214264835-4fba2060-e332-40b3-a803-3a738875b376.png)
+
+Em seguida, escolher se deseja controlar o forno pelo dashboard, ou pela curva.
+![image](https://user-images.githubusercontent.com/38733364/214265050-c4af5e64-07c1-4a44-a1f4-fe4aa3f02ab0.png)
