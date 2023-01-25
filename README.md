@@ -1,5 +1,9 @@
 # FUNDAMENTOS DE SISTEMAS EMBARCADOS - PROJETO 2
 
+## Link para a apresentação do projeto
+
+https://www.youtube.com/watch?v=kFHSV38fTE8&feature=youtu.be
+
 ## Aluno
 
 |Matrícula | Aluno |
