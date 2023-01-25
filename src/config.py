@@ -37,6 +37,10 @@ class Oven:
   def warm(self, pid):
     self.res_pwm.start(pid)
 
+  def turnOff(self):
+    self.vent_pwm.stop()
+    self.res_pwm.stop()
+
 # Classe da UART, que monitora a conexão e as mensagens recebidas e enviadas
 class Uart:
   def __init__(self, port, baudrate, timeout=1):

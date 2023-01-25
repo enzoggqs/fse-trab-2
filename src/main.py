@@ -117,8 +117,6 @@ def receive_dashboard_commands():
 
     if data:
         button = int.from_bytes(data, 'little')%10
-
-        print('Botão: ')
         print(button)
 
         if button == 1:
