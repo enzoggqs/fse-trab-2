@@ -175,20 +175,20 @@ def send_ambient_temp():
     sendind.clear()
 
 def main_function():
+    sendind.set()
+
+    message = b'\x01\x16\xd4\x09\x00\x00\x06\x00'
+
+    uart.send(message, len(b'\x01\x16\xd4\x09\x00\x00\x06\x00'))
+    data = uart.receive()
+
+    if data is not None:
+        stop()
+        turned_on.set()
     while True:
-        sendind.set()
-
-        message = b'\x01\x16\xd4\x09\x00\x00\x06\x00'
-
-        uart.send(message, len(b'\x01\x16\xd4\x09\x00\x00\x06\x00'))
-        data = uart.receive()
-
-        if data is not None:
-            stop()
-            turned_on.set()
 
         sendind.clear()
-        
+
         receive_dashboard_commands()
         get_int_temp()
         get_ref_temp()
