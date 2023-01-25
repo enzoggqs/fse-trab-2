@@ -22,8 +22,8 @@ class Oven:
     self.res_pin = res_pin
     self.vent_pin = vent_pin
     self._setup_gpio()
-    self.vent_pwm = GPIO.PWM(vent_pin, 1000)
-    self.res_pwm = GPIO.PWM(res_pin, 1000)
+    self.vent_pwm = GPIO.PWM(vent_pin, 60)
+    self.res_pwm = GPIO.PWM(res_pin, 60)
 
   def _setup_gpio(self):
     GPIO.setmode(GPIO.BCM)
@@ -32,10 +32,10 @@ class Oven:
     GPIO.setup(self.vent_pin, GPIO.OUT)
 
   def chill(self, pid):
-    self.vent_pwm.ChangeDutyCycle(pid)
+    self.vent_pwm.start(pid)
         
   def warm(self, pid):
-    self.res_pwm.ChangeDutyCycle(pid)
+    self.res_pwm.start(pid)
 
 # Classe da UART, que monitora a conexão e as mensagens recebidas e enviadas
 class Uart:
@@ -83,6 +83,12 @@ class Uart:
     if self.serial and self.serial.isOpen():
       aux = calcCRC(message, size).to_bytes(2, 'little')
       msg = message + aux
+      self.serial.write(msg)
+    else:
+      self.connect()
+  
+  def write(self, msg):
+    if self.serial and self.serial.isOpen():
       self.serial.write(msg)
     else:
       self.connect()

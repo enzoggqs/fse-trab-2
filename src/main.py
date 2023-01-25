@@ -87,8 +87,6 @@ def control_signal(pid):
 def handler():
     if turned_on.is_set():
         if started.is_set():
-            print('entrou')
-
             pid_value = pid.pid_control(ref_temp, int_temp)
             control_signal(pid_value)
 
@@ -216,6 +214,7 @@ def handle_exit():
         while True:
             sleep(1)
     except KeyboardInterrupt:
+        oven.turnOff()
         stop()
         turn_off()
 
