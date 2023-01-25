@@ -1,6 +1,7 @@
 import struct
+import csv
 from time import sleep
-from threading import Event, Thread 
+from threading import Event, Thread
 from config import Uart, Oven, PID, ambient_temperature
 from datetime import datetime
 
@@ -175,7 +176,19 @@ def send_ambient_temp():
 
 def main_function():
     while True:
+        sendind.set()
 
+        message = b'\x01\x16\xd4\x09\x00\x00\x06\x00'
+
+        uart.send(message, len(b'\x01\x16\xd4\x09\x00\x00\x06\x00'))
+        data = uart.receive()
+
+        if data is not None:
+            stop()
+            turned_on.set()
+
+        sendind.clear()
+        
         receive_dashboard_commands()
         get_int_temp()
         get_ref_temp()
@@ -219,11 +232,11 @@ def menu():
   return option
 
 def main_function_curve():
-    count = 0
+    counter = 0
     while True:
         receive_dashboard_commands()
-        get_int_temp()
         get_ref_temp()
+        get_int_temp()
         send_ambient_temp()
         handler()
         sleep(1)
@@ -231,7 +244,57 @@ def main_function_curve():
         print("Temp referencia:", ref_temp)
         print("Temp ambiente:", amb_temp, "\n")
 
-        # if count >= 0 and count < 60:
+        if counter >= 0 and counter < 60:    
+            ref_temp = 25
+            reflow = struct.pack('f', 25)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+        elif counter >= 60 and counter < 120:
+            ref_temp = 38
+            reflow = struct.pack('f', 38)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+        elif counter >= 120 and counter < 240:
+            ref_temp = 46
+            reflow = struct.pack('f', 46)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))                
+        elif counter >= 240 and counter < 260:
+            ref_temp = 54
+            reflow = struct.pack('f', 54)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+        elif counter >= 260 and counter < 300:
+            ref_temp=57
+            reflow = struct.pack('f', 57)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+        elif counter >= 300 and counter < 360:
+            ref_temp = 61
+            reflow = struct.pack('f', 61)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+        elif counter >= 360 and counter < 420:
+            ref_temp = 63
+            reflow = struct.pack('f', 63)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+        elif counter >= 420 and counter < 480:
+            ref_temp = 54
+            reflow = struct.pack('f', 54)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+        elif counter >= 480 and counter < 600:
+            ref_temp = 33
+            reflow = struct.pack('f', 33)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+        elif counter >= 600:
+            ref_temp = 25
+            reflow = struct.pack('f', 25)
+            message = b'\x01\x16\xd2\x09\x00\x00\x06' + reflow
+            uart.send(message, len(message))
+            
         with open('logs.csv','a') as csvfile:
             if pid_value < 0:
                 ventoinha = pid_value
@@ -243,8 +306,9 @@ def main_function_curve():
             msg = f'Temperatura Referencial = {ref_temp},Temperatura Interna={int_temp},Temperatura Ambiente = {ambient_temperature}, Ventoinha = {ventoinha}%,Resistor = {resistor}%' 
             writer = csv.writer(csvfile, delimiter = ',')
             print(datetime.now().strftime('%d/%m/%Y %H:%M')+',',msg,file = csvfile)
+        # if counter >= 0 and counter < 60:
 
-        count += 1
+        counter += 1
 
 def handle_curve_control():
   sendind.set()
@@ -297,7 +361,7 @@ if __name__ == '__main__':
       turn_on()
 
       main_thread = Thread(target=main_function, args=())
-      main_thread.main_function()
+      main_thread.start()
 
       thread_handle_exit = Thread(target=handle_exit, args=())
       thread_handle_exit.start()       
